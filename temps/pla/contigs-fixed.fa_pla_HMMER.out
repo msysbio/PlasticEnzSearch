@@ -1,0 +1,13 @@
+#                                                               --- full sequence ---- --- best 1 domain ---- --- domain number estimation ----
+# target name        accession  query name           accession    E-value  score  bias   E-value  score  bias   exp reg clu  ov env dom rep inc description of target
+#------------------- ---------- -------------------- ---------- --------- ------ ----- --------- ------ -----   --- --- --- --- --- --- --- --- ---------------------
+#
+# Program:         hmmsearch
+# Version:         3.3.2 (Nov 2020)
+# Pipeline mode:   SEARCH
+# Query file:      /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/motifs/pla.hmm
+# Target file:     ./temps/contigs-fixed.faa
+# Option settings: hmmsearch --tblout /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/pla/contigs-fixed.fa_pla_HMMER.out -T 50.0 --tformat fasta /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/motifs/pla.hmm ./temps/contigs-fixed.faa 
+# Current dir:     /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool
+# Date:            Mon Jul  3 16:47:16 2023
+# [ok]

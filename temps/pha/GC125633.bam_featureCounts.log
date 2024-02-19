@@ -1,0 +1,49 @@
+
+        ==========     _____ _    _ ____  _____  ______          _____  
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \ 
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+	  v2.0.1
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 1 BAM file                                       ||
+||                           o GC125633.bam                                   ||
+||                                                                            ||
+||             Output file : pha_GC125633.bam_counts.out                      ||
+||                 Summary : pha_GC125633.bam_counts.out.summary              ||
+||              Annotation : contigs-fixed.saf (SAF)                          ||
+||      Dir for temp files : /home/jasper/OneDrive/Thesis/Plastic_tool/te ... ||
+||                                                                            ||
+||                 Threads : 1                                                ||
+||                   Level : meta-feature level                               ||
+||              Paired-end : no                                               ||
+||      Multimapping reads : not counted                                      ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file contigs-fixed.saf ...                                 ||
+||    Features : 26                                                           ||
+||    Meta-features : 26                                                      ||
+||    Chromosomes/contigs : 26                                                ||
+||                                                                            ||
+|| Process BAM file GC125633.bam...                                           ||
+||    WARNING: Paired-end reads were found.                                   ||
+||    Total alignments : 8159551                                              ||
+||    Successfully assigned alignments : 51 (0.0%)                            ||
+||    Running time : 0.15 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+|| Summary of counting results can be found in file "/home/jasper/OneDrive/T  ||
+|| hesis/Plastic_tool/temps/pha/pha_GC125633.bam_counts.out.summary"          ||
+||                                                                            ||
+\\============================================================================//
+

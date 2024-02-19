@@ -1,0 +1,40 @@
+# hmmsearch :: search profile(s) against a sequence database
+# HMMER 3.3.2 (Nov 2020); http://hmmer.org/
+# Copyright (C) 2020 Howard Hughes Medical Institute.
+# Freely distributed under the BSD open source license.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# query HMM file:                  /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/motifs/pla.hmm
+# target sequence database:        ./temps/contigs-fixed.faa
+# per-seq hits tabular output:     /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/pla/contigs-fixed.fa_pla_HMMER.out
+# sequence reporting threshold:    score >= 50
+# targ <seqfile> format asserted:  fasta
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query:       result  [M=264]
+Scores for complete sequences (score includes all domains):
+   --- full sequence ---   --- best 1 domain ---    -#dom-
+    E-value  score  bias    E-value  score  bias    exp  N  Sequence Description
+    ------- ------ -----    ------- ------ -----   ---- --  -------- -----------
+
+   [No hits detected that satisfy reporting thresholds]
+
+
+Domain annotation for each sequence (and alignments):
+
+   [No targets detected that satisfy reporting thresholds]
+
+
+Internal pipeline statistics summary:
+-------------------------------------
+Query model(s):                            1  (264 nodes)
+Target sequences:                    1858951  (265418497 residues searched)
+Passed MSV filter:                     63373  (0.0340907); expected 37179.0 (0.02)
+Passed bias filter:                    41522  (0.0223363); expected 37179.0 (0.02)
+Passed Vit filter:                      5321  (0.00286237); expected 1859.0 (0.001)
+Passed Fwd filter:                      1099  (0.000591194); expected 18.6 (1e-05)
+Initial search space (Z):            1858951  [actual number of targets]
+Domain search space  (domZ):               0  [number of targets reported over threshold]
+# CPU time: 5.90u 0.19s 00:00:06.09 Elapsed: 00:00:02.31
+# Mc/sec: 30328.47
+//
+[ok]

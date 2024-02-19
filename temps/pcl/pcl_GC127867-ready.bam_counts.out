@@ -1,0 +1,4 @@
+# Program:featureCounts v2.0.1; Command:"featureCounts" "-a" "/Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/pcl/contigs-fixed.saf" "-F" "SAF" "-o" "/Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/pcl/pcl_GC127867-ready.bam_counts.out" "/Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Field/Shotgun/Daphnia_microbiome/bams/daphnia_microbiome/st.donatus/GC127867-ready.bam" 
+Geneid	Chr	Start	End	Strand	Length	/Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Field/Shotgun/Daphnia_microbiome/bams/daphnia_microbiome/st.donatus/GC127867-ready.bam
+c_000000353011_1	c_000000353011	3	335	-	333	0
+c_000000396760_2	c_000000396760	85	747	-	663	0

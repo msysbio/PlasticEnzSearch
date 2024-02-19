@@ -1,0 +1,51 @@
+
+        ==========     _____ _    _ ____  _____  ______          _____  
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \ 
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+	  v2.0.1
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 1 BAM file                                       ||
+||                           o GC127855-ready.bam                             ||
+||                                                                            ||
+||             Output file : ab-hydrolase_GC127855-ready.bam_counts.out       ||
+||                 Summary : ab-hydrolase_GC127855-ready.bam_counts.out.s ... ||
+||              Annotation : contigs-fixed.saf (SAF)                          ||
+||      Dir for temp files : /Users/u0145079/Library/CloudStorage/OneDriv ... ||
+||                                                                            ||
+||                 Threads : 1                                                ||
+||                   Level : meta-feature level                               ||
+||              Paired-end : no                                               ||
+||      Multimapping reads : not counted                                      ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file contigs-fixed.saf ...                                 ||
+||    Features : 2702                                                         ||
+||    Meta-features : 2702                                                    ||
+||    Chromosomes/contigs : 2669                                              ||
+||                                                                            ||
+|| Process BAM file GC127855-ready.bam...                                     ||
+||    WARNING: Paired-end reads were found.                                   ||
+||    Total alignments : 22003370                                             ||
+||    Successfully assigned alignments : 8379 (0.0%)                          ||
+||    Running time : 0.38 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+|| Summary of counting results can be found in file "/Users/u0145079/Library  ||
+|| /CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plast  ||
+|| ic_tool/temps/ab-hydrolase/ab-hydrolase_GC127855-ready.bam_counts.out.sum  ||
+|| mary"                                                                      ||
+||                                                                            ||
+\\============================================================================//
+

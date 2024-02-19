@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "C:\Users\j_sno\OneDrive - KU Leuven\Bioinformatics\Thesis\Plastic_tool\main.py", line 54, in <module>
+    translate_search(args)
+  File "C:\Users\j_sno\OneDrive - KU Leuven\Bioinformatics\Thesis\Plastic_tool\translate_search.py", line 145, in translate_search
+    qresults = SearchIO.read(hmm_output, "hmmer3-tab")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Code\Anaconda\Lib\site-packages\Bio\SearchIO\__init__.py", line 348, in read
+    query_result = next(query_results)
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Code\Anaconda\Lib\site-packages\Bio\SearchIO\__init__.py", line 304, in parse
+    with as_handle(handle, **handle_kwargs) as source_file:
+  File "C:\Code\Anaconda\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Code\Anaconda\Lib\site-packages\Bio\File.py", line 72, in as_handle
+    with open(handleish, mode, **kwargs) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\j_sno\\OneDrive - KU Leuven\\Bioinformatics\\Thesis\\Plastic_tool\\t\\temps\\ab-hydrolase\\t_ab-hydrolase_HMMER.out'
+[Errno 2] No such file or directory: 'C:\\Users\\j_sno\\OneDrive - KU Leuven\\Bioinformatics\\Thesis\\Plastic_tool\\t\\temps\\ab-hydrolase\\t_ab-hydrolase_HMMER.out'

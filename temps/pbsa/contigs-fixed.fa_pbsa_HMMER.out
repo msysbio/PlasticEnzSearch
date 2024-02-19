@@ -1,0 +1,18 @@
+#                                                               --- full sequence ---- --- best 1 domain ---- --- domain number estimation ----
+# target name        accession  query name           accession    E-value  score  bias   E-value  score  bias   exp reg clu  ov env dom rep inc description of target
+#------------------- ---------- -------------------- ---------- --------- ------ ----- --------- ------ -----   --- --- --- --- --- --- --- --- ---------------------
+c_000000276986_1     -          result               -            5.2e-22   85.5   0.0   6.3e-22   85.3   0.0   1.0   1   0   0   1   1   1   1 # 1 # 609 # 1 # ID=276986_1;partial=10;start_type=Edge;rbs_motif=None;rbs_spacer=None;gc_cont=0.739
+c_000001042547_1     -          result               -            2.2e-17   70.4   0.0   3.1e-17   69.9   0.0   1.2   1   0   0   1   1   1   1 # 3 # 566 # -1 # ID=1042547_1;partial=10;start_type=ATG;rbs_motif=None;rbs_spacer=None;gc_cont=0.612
+c_000001038898_1     -          result               -            5.7e-17   69.0   0.0   8.2e-17   68.5   0.0   1.1   1   0   0   1   1   1   1 # 2 # 544 # -1 # ID=1038898_1;partial=10;start_type=ATG;rbs_motif=None;rbs_spacer=None;gc_cont=0.626
+c_000000251918_2     -          result               -            3.3e-15   63.3   0.0   3.9e-15   63.0   0.0   1.0   1   0   0   1   1   1   1 # 796 # 1419 # 1 # ID=251918_2;partial=00;start_type=ATG;rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp;gc_cont=0.546
+c_000000623838_1     -          result               -            5.3e-15   62.6   0.0   5.9e-15   62.5   0.0   1.0   1   0   0   1   1   1   1 # 30 # 599 # -1 # ID=623838_1;partial=00;start_type=ATG;rbs_motif=None;rbs_spacer=None;gc_cont=0.430
+#
+# Program:         hmmsearch
+# Version:         3.3.2 (Nov 2020)
+# Pipeline mode:   SEARCH
+# Query file:      /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/motifs/pbsa.hmm
+# Target file:     ./temps/contigs-fixed.faa
+# Option settings: hmmsearch --tblout /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/pbsa/contigs-fixed.fa_pbsa_HMMER.out -T 62.0 --tformat fasta /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/motifs/pbsa.hmm ./temps/contigs-fixed.faa 
+# Current dir:     /Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool
+# Date:            Mon Jul  3 16:44:39 2023
+# [ok]

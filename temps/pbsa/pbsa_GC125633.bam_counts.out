@@ -1,0 +1,7 @@
+# Program:featureCounts v2.0.1; Command:"featureCounts" "-a" "/home/jasper/OneDrive/Thesis/Plastic_tool/temps/pbsa/contigs-fixed.saf" "-F" "SAF" "-o" "/home/jasper/OneDrive/Thesis/Plastic_tool/temps/pbsa/pbsa_GC125633.bam_counts.out" "/home/jasper/Test_data/GC125633.bam" 
+Geneid	Chr	Start	End	Strand	Length	/home/jasper/Test_data/GC125633.bam
+c_000000251918_2	c_000000251918	796	1419	+	624	0
+c_000000276986_1	c_000000276986	1	609	+	609	0
+c_000000623838_1	c_000000623838	30	599	-	570	0
+c_000001038898_1	c_000001038898	2	544	-	543	0
+c_000001042547_1	c_000001042547	3	566	-	564	0
