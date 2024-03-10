@@ -1,53 +1,19 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 22 15:09:30 2023
-
-@author: u0145079
-"""
 from Bio import SeqIO
-from Bio.Seq import Seq
 import os
-from utilities import check_dependencies,spinning_cursor_task
-import threading
+import utilities
 import subprocess
+import threading
 import time
-import os
+import multiprocessing
+from functools import partial
 
-def check_files_and_folders(args):
-    # Check if output directory exists
-    if not os.path.isdir(args.output):
-        print(f"Output directory {args.output} does not exist.")
-        return False
-    
-    # Check if temps directory exists
-    global temps_folder
-    temps_folder = os.path.join(args.output, 'temps')
-    if not os.path.isdir(temps_folder):
-        print(f"Temps directory {temps_folder} does not exist.")
-        return False
-    
-    # Check if contigs file exists
-    if not os.path.isfile(args.contigs):
-        print(f"Contigs file {args.contigs} does not exist.")
-        return False
-    
-    # Check if bam/sam files exist
-    if ',' in args.mappings:
-        mapping_files = args.mappings.split(',')
-    else:
-        mapping_files = [args.mappings]
-    
-    for mapping_file in mapping_files:
-        if not os.path.isfile(mapping_file.strip()):
-            print(f"Mapping file {mapping_file.strip()} does not exist.")
-            return False
+def check_translate_result(args):
 
     # Check if aa and nt files exist
     contigs_file = os.path.basename(args.contigs)
-    contigs_base = os.path.basename(args.contigs).split(".")[0]
-    aa_file = os.path.join(temps_folder, f"{contigs_base}.faa")
-    nt_file = os.path.join(temps_folder, f"{contigs_base}.ffn")
+    contigs_base = contigs_file.split(".")[0]
+    aa_file = os.path.join(args.temps, f"{contigs_base}.faa")
+    nt_file = os.path.join(args.temps, f"{contigs_base}.ffn")
     
     if not os.path.isfile(aa_file):
         print(f"AA file {aa_file} does not exist.")
@@ -109,13 +75,8 @@ def ffn_to_saf(input_ffn_file, output_saf_file):
             saf.write("\t".join([gene_id, chr, start, end, strand]) + "\n")
 
 def annotation(args):
-    if not check_files_and_folders(args):
+    if not check_translate_result(args):
         return
-    
-    check_dependencies("featureCounts")
-    
-    # Get the base name of the contigs file
-    contigs_base = os.path.basename(args.contigs).split(".")[0]
 
     # Determine the plastic types to be considered
     motif_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "motifs")
@@ -124,16 +85,36 @@ def annotation(args):
     elif isinstance(args.plastic, str) and args.plastic.lower() == "all":
         plastic_types = [os.path.splitext(file)[0] for file in os.listdir(motif_dir) if file.endswith('.hmm')]
 
-    # Process each plastic type
-    for plastic_type in plastic_types:
-        temp_folder_path = os.path.join(args.output, 'temps', plastic_type)
+    # Create a new function that has `args` already filled in
+    featurecounts_p = partial(featurecounts, args=args)
+
+    task_done = threading.Event()
+    t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'featureCounts'))
+    t.start()
+
+    # Start the tasks
+    pool = multiprocessing.Pool(processes=utilities.get_logical_cores())
+    pool.map(featurecounts_p, plastic_types)
+
+    # Wait for the tasks to finish
+    pool.close()
+    pool.join()
+    task_done.set()
+    t.join()
+
+def featurecounts(plastic_type, args):
+    try:
+        # Get the base name of the contigs file
+        contigs_base = os.path.basename(args.contigs).split(".")[0]
+
+        temp_folder_path = os.path.join(args.temps, plastic_type)
         fasta_files = [file for file in os.listdir(temp_folder_path) if file.endswith('.fasta')]
         
         if fasta_files:
             # Construct file paths
             print(fasta_files)
             hits_file_path = os.path.join(temp_folder_path, fasta_files[0])
-            genes_file_path = os.path.join(temps_folder, f"{contigs_base}.ffn")
+            genes_file_path = os.path.join(args.temps, f"{contigs_base}.ffn")
             print(genes_file_path)
             output_file_base = os.path.basename(fasta_files[0]).split(".")[0]
             output_file_path = os.path.join(temp_folder_path, f"{output_file_base}.fnn")
@@ -148,7 +129,7 @@ def annotation(args):
             ffn_to_saf(corrected_file_path, saf_file_path)
         else:
             print(f"No .fasta files found in {temp_folder_path}. Skipping this folder.")
-            continue
+            pass
 
         
         #use FeatureCount to quantify
@@ -174,14 +155,9 @@ def annotation(args):
         
             with open(log_file, 'w') as f, open(program_output_file, 'w') as p_out:
                 process = subprocess.Popen(fc_command, shell=True, stdout=p_out, stderr=f)
-        
-            t = threading.Thread(target=spinning_cursor_task, args=(task_done,'featureCounts'))
-            t.start()
-        
+
             while process.poll() is None:
                 time.sleep(0.1)
-            task_done.set()
-            t.join()
 
             #Calculate statistsc on the abundance data: average, standard div, sum.
 
@@ -226,16 +202,5 @@ def annotation(args):
                             # Write row to TSV file
                             tsv_file.write('\t'.join([sample_name, str(reads_mapped), str(total_reads), str(proportion)]) + '\n')
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    
+    except Exception as e:
+        print(f"Error running HMMER for {plastic_type}: {e}")

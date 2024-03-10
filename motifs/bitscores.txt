@@ -5,6 +5,6 @@ pcl.hmm: 60
 pet.hmm:75
 pha.hmm:60
 phb.hmm:55
-pls.hmm:50
+pla.hmm:50
 cutinase.hmm:25.9
 ab-hydrolase.hmm:26.3

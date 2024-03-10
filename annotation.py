@@ -81,5 +81,3 @@ def blast_search_in_directory(directory):
         logging.error(f"Error in blast_search_in_directory function: {e}")
         print(error2)
         print("The annotation step was interrupted :-( , check the annotation.log file for more information")
-
-blast_search_in_directory("/Users/u0145079/Library/CloudStorage/OneDrive-KULeuven/Desktop/PlasticDaphnia/Plastic_tool/Plastic_tool/temps/")

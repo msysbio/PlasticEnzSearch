@@ -42,10 +42,7 @@ def check_args(args):
     if args.gene_counts_file and args.bams is None:
         pass  # do nothing
 
-def quantify_hmm(args):
-    check_dependencies('samtools')
-    # Locate the hmmersearch output file in the temporary folder
-    temp_dir = os.path.join(args.output, "temps")
+def quantify_hmm(p):
 
 # Load the read_counts table and sum the second column
     if args.gene_counts_file is None and args.bams:
@@ -57,8 +54,8 @@ def quantify_hmm(args):
         for bam_file in bam_files:
             samtools_command = f"samtools idxstats {bam_file}"
             base = os.path.basename(bam_file).split(".")[0]
-            log_file = os.path.abspath(os.path.join(temp_dir, f"{base}_samtools.log"))
-            samtools_output = os.path.abspath(os.path.join(temp_dir, f"{base}_samtools_output.tsv"))
+            log_file = os.path.abspath(os.path.join(p.temps, f"{base}_samtools.log"))
+            samtools_output = os.path.abspath(os.path.join(p.temps, f"{base}_samtools_output.tsv"))
             
             task_done = threading.Event()
     
@@ -146,7 +143,7 @@ def quantify_hmm(args):
             abundance_df = pd.DataFrame(abundance_data, columns=['Sample', 'Average abundance (average RPKM)', 'Average_bit_score', 'Bit_stats', 'Enzyme substrate'])
 
             # Specify the output directory
-            output_directory = os.path.join(args.output, 'output')
+            output_directory = os.path.join(p.output, 'output')
             
             # Create the output directory if it does not exist
             os.makedirs(output_directory, exist_ok=True)
