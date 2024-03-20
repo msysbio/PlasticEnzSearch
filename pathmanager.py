@@ -70,8 +70,8 @@ class PathManager:
     
     @property
     def mappings(self):
-        return self._args.mappings
-    
+        return self._args.mappings    
+
     @property
     def temps(self):
         return self._temps
@@ -87,4 +87,12 @@ class PathManager:
     @property
     def all_plastics(self):
         return self._all_plastics
+    
+    @property
+    def multiprocessing(self):
+        return self._args.p if hasattr(self._args, 'p') else True
+    
+    @property
+    def force_overwrite(self):
+        return self._args.f if hasattr(self._args, 'f') else True
     

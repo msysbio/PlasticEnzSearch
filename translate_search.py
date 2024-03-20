@@ -6,18 +6,19 @@ import threading
 import utilities
 import multiprocessing
 from functools import partial
+import shutil
 
 #use pprodigal if installed, parallelizes prodigal
 def get_prodigal_command(p):
     contigs_base = os.path.basename(p.contigs).split(".")[0]
     aa_file = os.path.join(p.temps, f"{contigs_base}.faa")
     nt_file = os.path.join(p.temps, f"{contigs_base}.ffn")
-
-    cores = utilities.run_in_parallel("pprodigal")
-    if cores == 1:
-        return f"prodigal -i {p.contigs} -a {aa_file} -p meta -d {nt_file}"
+    
+    if p.multiprocessing:
+        cores = utilities.run_in_parallel("pprodigal")
+        return f"pprodigal -i {p.contigs} -a {aa_file} -p meta -d {nt_file} --tasks {cores}"
     else:
-        return f"pprodigal -i {p.contigs} -a {aa_file} -p meta -d {nt_file}" 
+        return f"prodigal -i {p.contigs} -a {aa_file} -p meta -d {nt_file}"
 
 
 def run_prodigal(p):
@@ -26,18 +27,15 @@ def run_prodigal(p):
     elif isinstance(p.plastic, str) and p.plastic == "all":
         plastic_names = p.all_plastics
               
-    if p.plastic.lower() == "all":
-        # Create a sub-directory for each plastic type
-        for plastic_name in plastic_names:
-            temp_dir = os.path.join(os.path.abspath(p.output), "temps", plastic_name.lower())
-            if os.path.exists(temp_dir):
-                raise ValueError("ERROR: Temps folder already exists, please remove it and run the program again.")
-            else:
-                os.makedirs(temp_dir, exist_ok=True)
-    else:
-        temp_dir = os.path.join(os.path.abspath(p.output), "temps")
+    # Create a sub-directory for each plastic type
+    for plastic_name in plastic_names:
+        temp_dir = os.path.join(os.path.abspath(p.output), "temps", plastic_name.lower())
         if os.path.exists(temp_dir):
-            raise ValueError("ERROR: Temps folder already exists, please remove it and run the program again.")
+            if p.force_overwrite:
+                shutil.rmtree(temp_dir)
+                os.makedirs(temp_dir, exist_ok=True)
+            else:
+                raise ValueError("ERROR: Temps folder already exists, please remove it and run the program again.")
         else:
             os.makedirs(temp_dir, exist_ok=True)
             
@@ -76,13 +74,22 @@ def run_hmmer(p):
     t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'hmmer'))
     t.start()
 
+    utilities.disable_swap()
     # Start the tasks
-    pool = multiprocessing.Pool(processes=4)
+    if p.multiprocessing:
+        pool = multiprocessing.Pool(processes=4)
+
+    else:
+        pool = multiprocessing.Pool(processes=1)
+    
     pool.map(run_hmmer_thread_p, plastic_names)
 
     # Wait for the tasks to finish
     pool.close()
     pool.join()
+
+    utilities.enable_swap()
+
     task_done.set()
     t.join()
     

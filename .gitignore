@@ -1,3 +1,6 @@
 *.txt
 *.log
 *.pyc
+*.ini
+*.bak
+*.json

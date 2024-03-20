@@ -7,13 +7,13 @@ import time
 import multiprocessing
 from functools import partial
 
-def check_translate_result(args):
+def check_translate_result(p):
 
     # Check if aa and nt files exist
-    contigs_file = os.path.basename(args.contigs)
+    contigs_file = os.path.basename(p.contigs)
     contigs_base = contigs_file.split(".")[0]
-    aa_file = os.path.join(args.temps, f"{contigs_base}.faa")
-    nt_file = os.path.join(args.temps, f"{contigs_base}.ffn")
+    aa_file = os.path.join(p.temps, f"{contigs_base}.faa")
+    nt_file = os.path.join(p.temps, f"{contigs_base}.ffn")
     
     if not os.path.isfile(aa_file):
         print(f"AA file {aa_file} does not exist.")
@@ -74,26 +74,26 @@ def ffn_to_saf(input_ffn_file, output_saf_file):
             # Write the SAF entry
             saf.write("\t".join([gene_id, chr, start, end, strand]) + "\n")
 
-def annotation(args):
-    if not check_translate_result(args):
+def annotation(p):
+    if not check_translate_result(p):
         return
 
     # Determine the plastic types to be considered
     motif_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "motifs")
-    if isinstance(args.plastic, str) and args.plastic.lower() != "all":
-        plastic_types = args.plastic.split(',')
-    elif isinstance(args.plastic, str) and args.plastic.lower() == "all":
+    if isinstance(p.plastic, str) and p.plastic.lower() != "all":
+        plastic_types = p.plastic.split(',')
+    elif isinstance(p.plastic, str) and p.plastic.lower() == "all":
         plastic_types = [os.path.splitext(file)[0] for file in os.listdir(motif_dir) if file.endswith('.hmm')]
 
-    # Create a new function that has `args` already filled in
-    featurecounts_p = partial(featurecounts, args=args)
+    # Create a new function that has `p` already filled in
+    featurecounts_p = partial(featurecounts, p=p)
 
     task_done = threading.Event()
     t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'featureCounts'))
     t.start()
 
     # Start the tasks
-    pool = multiprocessing.Pool(processes=utilities.get_logical_cores())
+    pool = multiprocessing.Pool(processes=utilities.get_logical_cores() if p.multiprocessing else 1)
     pool.map(featurecounts_p, plastic_types)
 
     # Wait for the tasks to finish
@@ -102,19 +102,19 @@ def annotation(args):
     task_done.set()
     t.join()
 
-def featurecounts(plastic_type, args):
+def featurecounts(plastic_type, p):
     try:
         # Get the base name of the contigs file
-        contigs_base = os.path.basename(args.contigs).split(".")[0]
+        contigs_base = os.path.basename(p.contigs).split(".")[0]
 
-        temp_folder_path = os.path.join(args.temps, plastic_type)
+        temp_folder_path = os.path.join(p.temps, plastic_type)
         fasta_files = [file for file in os.listdir(temp_folder_path) if file.endswith('.fasta')]
         
         if fasta_files:
             # Construct file paths
             print(fasta_files)
             hits_file_path = os.path.join(temp_folder_path, fasta_files[0])
-            genes_file_path = os.path.join(args.temps, f"{contigs_base}.ffn")
+            genes_file_path = os.path.join(p.temps, f"{contigs_base}.ffn")
             print(genes_file_path)
             output_file_base = os.path.basename(fasta_files[0]).split(".")[0]
             output_file_path = os.path.join(temp_folder_path, f"{output_file_base}.fnn")
@@ -140,7 +140,7 @@ def featurecounts(plastic_type, args):
         #There should one .saf file per plastic folder.      
         
         # Split the mappings argument into a list of individual file paths
-        mapping_files = args.mappings.split(',')
+        mapping_files = p.mappings.split(',')
         for mapping_file in mapping_files:
             mapping_file = mapping_file.strip()  # Remove any leading/trailing whitespace
             fc_input = saf_file_path

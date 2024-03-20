@@ -58,6 +58,10 @@ if __name__ == "__main__":
     required.add_argument('--contigs', required=True, help='Provide contigs file path')
     required.add_argument('--mappings', help='Provide path to BAM/SAM files separated by the comma')
  
+    # Add optional arguments
+    optional.add_argument('--p', action='store_true', help='Enable multiprocessing')
+    optional.add_argument('--f', action='store_true', help='Force overwrite existing files')
+ 
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
               help='Show this help message and exit')
  

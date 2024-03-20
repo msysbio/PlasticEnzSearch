@@ -8,7 +8,35 @@ import logging
 import csv
 
 class PlasticEnzymeSearch:
+    """A class representing the PlasticEnz GUI.
+
+    This class provides functionality to run the Plastic Tool with a graphical user interface.
+
+    Args:
+        page (ft.Page): The page object representing the user interface.
+
+    Attributes:
+        page (ft.Page): The page object representing the user interface.
+        plastic_types (tuple): A tuple containing the types of plastics.
+        selected_contigs (ft.TextField): A text field to display selected contig files.
+        selected_mappings (ft.TextField): A text field to display selected mapping files.
+        directory_path (ft.TextField): A text field to display the selected directory path.
+        selected_plastics_text (ft.TextField): A text field to display the selected plastic types.
+        output_markdown (ft.Markdown): A markdown widget to display the output.
+        progress_ring (ft.Container): A container widget containing a progress ring.
+        submit_btn (ft.ElevatedButton): A button to submit the search.
+        centered_submit_btn (ft.Container): A container widget to center the submit button.
+        centered_output_markdown (ft.Container): A container widget to center the output markdown.
+
+    """
+
     def __init__(self, page: ft.Page):
+        """Initialize the PlasticEnzymeSearch object.
+
+        Args:
+            page (ft.Page): The page object representing the user interface.
+
+        """
         # Initialize the page and set its title
         self.page = page
         self.page.title = "Plastic Enzyme Search"
@@ -37,24 +65,55 @@ class PlasticEnzymeSearch:
         self.centered_submit_btn = ft.Container(content=self.submit_btn, alignment=ft.alignment.center)
         self.centered_output_markdown = ft.Container(content=self.output_markdown, alignment=ft.alignment.center)
 
-    # Define result handlers for file pickers
     def pick_contigs_result(self, e: ft.FilePickerResultEvent):
+        """Handle the result of the contigs file picker.
+
+        This method updates the selected contigs text field with the selected files.
+
+        Args:
+            e (ft.FilePickerResultEvent): The event object containing the selected files.
+
+        """
         # Update the selected contigs text field with the selected files
-        self.selected_contigs.value = ", ".join(map(lambda f: f.path, e.files)) if e.files else "No files selected!"
+        self.selected_contigs.value = ",".join(map(lambda f: f.path, e.files)) if e.files else "No files selected!"
         self.selected_contigs.update()
 
     def pick_mappings_result(self, e: ft.FilePickerResultEvent):
+        """Handle the result of the mappings file picker.
+
+        This method updates the selected mappings text field with the selected files.
+
+        Args:
+            e (ft.FilePickerResultEvent): The event object containing the selected files.
+
+        """
         # Update the selected mappings text field with the selected files
-        self.selected_mappings.value = ", ".join(map(lambda f: f.path, e.files)) if e.files else "No files selected!"
+        self.selected_mappings.value = ",".join(map(lambda f: f.path, e.files)) if e.files else "No files selected!"
         self.selected_mappings.update()
 
     def get_directory_result(self, e: ft.FilePickerResultEvent):
+        """Handle the result of the directory picker.
+
+        This method updates the directory path text field with the selected directory.
+
+        Args:
+            e (ft.FilePickerResultEvent): The event object containing the selected directory.
+
+        """
         # Update the directory path text field with the selected directory
         self.directory_path.value = e.path if e.path else "No directory selected!"
         self.directory_path.update()
 
-    # Define the click handler for plastic types
     def check_item_clicked(self, e, plastic):
+        """Handle the click event of a plastic type checkbox.
+
+        This method toggles the checkbox value and updates the selected plastics text field.
+
+        Args:
+            e: The event object containing the checkbox information.
+            plastic (str): The plastic type associated with the checkbox.
+
+        """
         # Toggle the checkbox value
         e.control = not e.control
 
@@ -68,17 +127,25 @@ class PlasticEnzymeSearch:
         selected_plastics = [item.label for item in self.plastic_checkboxes if item.value]
         if 'all' in selected_plastics and len(selected_plastics) > 1:
             selected_plastics = ['all']
-        self.selected_plastics_text.value = ", ".join(selected_plastics)
+        self.selected_plastics_text.value = ",".join(selected_plastics)
         self.selected_plastics_text.update()
         self.page.update()
 
-    # Define click handler for the submit button
     def button_clicked(self, e):
+        """Handle the click event of the submit button.
+
+        This method runs the PlasticEnzSearch application and updates the output markdown widget.
+
+        Args:
+            e: The event object containing the button information.
+
+        """
         # Redirect standard output to a string buffer
         old_stdout = sys.stdout
         sys.stdout = buffer = io.StringIO()
 
         try:
+            print(self.selected_plastics_text.value)
             # Create an Args object with the selected values
             args = Args(
                 output=self.directory_path.value,
@@ -129,6 +196,11 @@ class PlasticEnzymeSearch:
         self.page.update()
 
     def run(self):
+        """Run the Plastic Enzyme Search application.
+
+        This method sets up the user interface and runs the application.
+
+        """
         # Create file pickers
         pick_contigs_dialog = ft.FilePicker(on_result=self.pick_contigs_result)
         pick_mappings_dialog = ft.FilePicker(on_result=self.pick_mappings_result)
@@ -184,10 +256,15 @@ class PlasticEnzymeSearch:
         )
 
 if __name__ == '__main__':
-    # Define a function to run the app
     def run_app(page: ft.Page):
-        # Create an instance of PlasticEnzymeSearch with the page argument
+        """Run the Plastic Enzyme Search application.
+
+        This function creates an instance of the PlasticEnzymeSearch class and runs the application.
+
+        Args:
+            page (ft.Page): The page object representing the user interface.
+
+        """
         PlasticEnzymeSearch(page).run()
-    # Pass run_app as the target function to ft.app
-    # ft.app will call run_app and pass the page argument to it
-    ft.app(target=run_app)#, view=ft.WEB_BROWSER)
+
+    ft.app(target=run_app)

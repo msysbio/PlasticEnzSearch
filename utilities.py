@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import multiprocessing
+import subprocess
 
 def check_dependencies():
     # List of commands to check
@@ -10,6 +11,12 @@ def check_dependencies():
     
     for command in commands:
         add_to_path(command)
+
+def disable_swap():
+    subprocess.run(["swapoff", "-a"], shell=True, executable="/bin/bash")
+
+def enable_swap():
+    subprocess.run(["swapon", "-a"], shell=True, executable="/bin/bash")
 
 # Find the full path to the command
 def get_path(command):
