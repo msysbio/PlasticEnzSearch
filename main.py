@@ -5,7 +5,8 @@ import io
 import sys
 import traceback
 import logging
-import csv
+import os
+import webbrowser
 
 class PlasticEnzymeSearch:
     """A class representing the PlasticEnz GUI.
@@ -44,13 +45,14 @@ class PlasticEnzymeSearch:
         # Define the types of plastics
         self.plastic_types = ('all', 'pbat', 'nylon', 'ab-hydrolase', 'pet', 'pbsa', 'pha', 'pcl', 'phb', 'pla', 'cutinase')
 
+        textfield_width = 1000
         # Create text fields to display selected files/directory
-        self.selected_contigs = ft.TextField()
-        self.selected_mappings = ft.TextField()
-        self.directory_path = ft.TextField()
+        self.selected_contigs = ft.TextField(width=textfield_width)
+        self.selected_mappings = ft.TextField(width=textfield_width)
+        self.directory_path = ft.TextField(width=textfield_width)
 
         # Create a text widget to display selected plastics
-        self.selected_plastics_text = ft.TextField()
+        self.selected_plastics_text = ft.TextField(width=textfield_width)
 
         # Create markdown widget to display the output
         self.output_markdown = ft.Markdown()
@@ -131,6 +133,9 @@ class PlasticEnzymeSearch:
         self.selected_plastics_text.update()
         self.page.update()
 
+
+
+
     def button_clicked(self, e):
         """Handle the click event of the submit button.
 
@@ -145,7 +150,6 @@ class PlasticEnzymeSearch:
         sys.stdout = buffer = io.StringIO()
 
         try:
-            print(self.selected_plastics_text.value)
             # Create an Args object with the selected values
             args = Args(
                 output=self.directory_path.value,
@@ -163,23 +167,9 @@ class PlasticEnzymeSearch:
             # Remove progress ring from the page
             self.page.remove(self.progress_ring)
 
-            # Read the TSV file
-            plastics = []
-            if args.plastic == 'all':
-                plastics = self.plastic_types
-            else:
-                plastics = args.plastic.split(',')
-            for plastic in plastics:
-
-                try:
-                    with open(f'{args.output}/temps/{plastic}/mapping_summary.tsv', 'r') as f:
-                        reader = csv.reader(f, delimiter='\t')
-                        data = list(reader)
-                    # Create a DataTable and add it to the page
-                    table = ft.DataTable(items=data)
-                    self.page.append(table)
-                except FileNotFoundError:
-                    pass
+            # Create the html report button and add it to the page
+            self.launch_url_btn = ft.ElevatedButton(text="html report", on_click=lambda e, args=args: webbrowser.open(args.output+'/abundances.html'))
+            self.page.add(ft.Container(content=self.launch_url_btn, alignment=ft.alignment.center))
 
         except Exception as e:
             # Write the error message to the buffer
@@ -191,9 +181,45 @@ class PlasticEnzymeSearch:
         sys.stdout = old_stdout
 
         # Update markdown widget with the output
-        self.output_markdown.value = buffer.getvalue()
-        self.output_markdown.update()
+        #self.output_markdown.value = buffer.getvalue()
+        #self.output_markdown.update()
         self.page.update()
+
+    def auto_button_clicked(self, e: ft.FilePickerResultEvent):
+        """Handle the click event of the auto button.
+
+        This method automatically fills in the text fields based on the selected directory.
+
+        Args:
+            e (ft.FilePickerResultEvent): The event object containing the selected directory.
+
+        """
+
+        # Check if the directory path is valid
+        if e.path:
+            # Create the output directory path
+            output_directory_path = os.path.join(e.path, "output")
+            self.directory_path.value = output_directory_path
+            self.directory_path.update()
+
+            # Create the output directory if it does not exist
+            if not os.path.exists(output_directory_path):
+                os.makedirs(output_directory_path)
+
+            # Get all files in the directory that end with ".fa" and update the selected contigs text field
+            contigs_files = [os.path.join(e.path, file) for file in os.listdir(e.path) if file.endswith(".fa")]
+            self.selected_contigs.value = ",".join(contigs_files) if contigs_files else "No files selected!"
+            self.selected_contigs.update()
+
+            # Get all files in the directory that end with ".bam" and update the selected mappings text field
+            mappings_files = [os.path.join(e.path, file) for file in os.listdir(e.path) if file.endswith(".bam")]
+            self.selected_mappings.value = ",".join(mappings_files) if mappings_files else "No files selected!"
+            self.selected_mappings.update()
+
+            # Update the selected plastics text field with "all"
+            self.selected_plastics_text.value = "all"
+            self.selected_plastics_text.update()
+
 
     def run(self):
         """Run the Plastic Enzyme Search application.
@@ -202,12 +228,13 @@ class PlasticEnzymeSearch:
 
         """
         # Create file pickers
+        auto_dialog = ft.FilePicker(on_result=self.auto_button_clicked)
         pick_contigs_dialog = ft.FilePicker(on_result=self.pick_contigs_result)
         pick_mappings_dialog = ft.FilePicker(on_result=self.pick_mappings_result)
         get_directory_dialog = ft.FilePicker(on_result=self.get_directory_result)
 
         # Add file pickers to the page overlay
-        self.page.overlay.extend([pick_contigs_dialog, pick_mappings_dialog, get_directory_dialog])
+        self.page.overlay.extend([auto_dialog, pick_contigs_dialog, pick_mappings_dialog, get_directory_dialog])
 
         # Create checkboxes for each plastic type
         self.plastic_checkboxes = [
@@ -224,6 +251,13 @@ class PlasticEnzymeSearch:
 
         # Add file pickers, plastic types row, and selected plastics text to the page
         self.page.add(
+            ft.Row([
+                ft.ElevatedButton(
+                    "Auto Fill",
+                    icon=ft.icons.FOLDER_OPEN,
+                    on_click=lambda _: auto_dialog.get_directory_path(),
+                ),
+            ]),
             ft.Row([ft.Text("Output Directory:"), self.directory_path]),
             ft.Row([
                 ft.ElevatedButton(
@@ -268,3 +302,4 @@ if __name__ == '__main__':
         PlasticEnzymeSearch(page).run()
 
     ft.app(target=run_app)
+    #ft.app(target=run_app, view=ft.AppView.WEB_BROWSER)

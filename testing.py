@@ -5,17 +5,27 @@ import translate_search
 from quantify_hmm import quantify_hmm
 from annotation import blast_search_in_directory
 from pathmanager import PathManager
+from output import create_html, remove_temps
+import PlasticEnz
 import os
 import database_operations
 
-class TestPlasticEnz(unittest.TestCase):
-    def setUp(self):
-        self.args = Args(output = '/home/jasper/Thesis/Test_data/output',
+args1 = Args(
+        output = '/home/jasper/Thesis/Test_data/output',
         contigs = '/home/jasper/Thesis/Test_data/BW_contigs.fa',
         plastic = 'all',
         mappings='/home/jasper/Thesis/Test_data/GC125633.bam,/home/jasper/Thesis/Test_data/GC125648.bam,/home/jasper/Thesis/Test_data/GC125657.bam,/home/jasper/Thesis/Test_data/GC125668.bam')
+       
+args2 = Args(     
+        output = '/home/jasper/Thesis/Test_data2/output',
+        contigs = '/home/jasper/Thesis/Test_data2/Citadell.contigs.fa',
+        plastic = 'all',
+        mappings='/home/jasper/Thesis/Test_data2/GC125618.sorted.bam,/home/jasper/Thesis/Test_data2/GC127864.sorted.bam')
+
+class TestPlasticEnz(unittest.TestCase):
+    def setUp(self):
+        self.args = args2
         self.p = PathManager(self.args)
-        
         
         #database_operations.database_fetch(self.args.plastic, self.args.output)
     
@@ -94,7 +104,6 @@ class TestPlasticEnz(unittest.TestCase):
             output_file = os.path.join(temp_dir, f"{self.p.contigs_base}_{plastic_name}_hmm_output_annotation.xlsx")
             self.assertTrue(os.path.exists(output_file), f"{plastic_name}: {output_file}")
 
-    @unittest.skip("")
     def test5_annotation(self):
         # Try to run the function
         try:
@@ -144,9 +153,24 @@ class TestPlasticEnz(unittest.TestCase):
             temp_dir = os.path.join(self.p.temps, plastic_name.lower())
             tsv_file = os.path.join(temp_dir, 'mapping_summary.tsv')
             self.assertTrue(os.path.exists(tsv_file), tsv_file)
+        
+    def test6_html(self):
+        # Try to run the function
+        try:
+            create_html(self.p)
+            remove_temps(self.p)
+        except Exception as e:
+            print(e)
 
-if __name__ == '__main__':
+        html_files = [file for file in os.listdir(self.p.output) if file.endswith('.html')]
+        self.assertTrue(html_files != [], html_files)
+
+def run_tests():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPlasticEnz)
     suite._tests.sort(key=lambda x: x._testMethodName)
     unittest.TextTestRunner().run(suite)
+
+if __name__ == '__main__':
+    #run_tests()
+    PlasticEnz.main(args2, debug=True)
 

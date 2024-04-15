@@ -6,6 +6,7 @@ import threading
 import time
 import multiprocessing
 from functools import partial
+import logging
 
 def check_translate_result(p):
 
@@ -16,11 +17,11 @@ def check_translate_result(p):
     nt_file = os.path.join(p.temps, f"{contigs_base}.ffn")
     
     if not os.path.isfile(aa_file):
-        print(f"AA file {aa_file} does not exist.")
+        logging.warning(f"AA file {aa_file} does not exist.")
         return False
     
     if not os.path.isfile(nt_file):
-        print(f"NT file {nt_file} does not exist.")
+        logging.warning(f"NT file {nt_file} does not exist.")
         return False
     
     # If all checks passed
@@ -84,13 +85,17 @@ def annotation(p):
         plastic_types = p.plastic.split(',')
     elif isinstance(p.plastic, str) and p.plastic.lower() == "all":
         plastic_types = [os.path.splitext(file)[0] for file in os.listdir(motif_dir) if file.endswith('.hmm')]
+    
+    #create tsv files for each mapping file
+    for mapping_file in p.mappings.split(','):
+        sample_name = mapping_file.split('.')[0].split('/')[-1]
+        tsv_output_file = os.path.join(p.temps, f'{sample_name}.tsv')
+        with open(tsv_output_file, 'w') as tsv_file:
+            tsv_file.write('\t'.join(["plastic name", "reads mapped", "total reads", "proportion"]) + '\n')
+
 
     # Create a new function that has `p` already filled in
     featurecounts_p = partial(featurecounts, p=p)
-
-    task_done = threading.Event()
-    t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'featureCounts'))
-    t.start()
 
     # Start the tasks
     pool = multiprocessing.Pool(processes=utilities.get_logical_cores() if p.multiprocessing else 1)
@@ -99,8 +104,6 @@ def annotation(p):
     # Wait for the tasks to finish
     pool.close()
     pool.join()
-    task_done.set()
-    t.join()
 
 def featurecounts(plastic_type, p):
     try:
@@ -112,10 +115,8 @@ def featurecounts(plastic_type, p):
         
         if fasta_files:
             # Construct file paths
-            print(fasta_files)
             hits_file_path = os.path.join(temp_folder_path, fasta_files[0])
             genes_file_path = os.path.join(p.temps, f"{contigs_base}.ffn")
-            print(genes_file_path)
             output_file_base = os.path.basename(fasta_files[0]).split(".")[0]
             output_file_path = os.path.join(temp_folder_path, f"{output_file_base}.fnn")
             
@@ -127,80 +128,88 @@ def featurecounts(plastic_type, p):
             # Convert corrected .ffn file to .saf
             saf_file_path = os.path.join(temp_folder_path, f"{output_file_base}.saf")
             ffn_to_saf(corrected_file_path, saf_file_path)
-        else:
-            print(f"No .fasta files found in {temp_folder_path}. Skipping this folder.")
-            pass
+            logging.info(f"Starting {plastic_type} featurecounts.")
 
-        
-        #use FeatureCount to quantify
-        
-        #SAM/BAM file may be a file list so you will need to loop through them
-        #one by one
-        
-        #There should one .saf file per plastic folder.      
-        
-        # Split the mappings argument into a list of individual file paths
-        mapping_files = p.mappings.split(',')
-        for mapping_file in mapping_files:
-            mapping_file = mapping_file.strip()  # Remove any leading/trailing whitespace
-            fc_input = saf_file_path
-            fc_output = os.path.join(temp_folder_path, f"{plastic_type}_{os.path.basename(mapping_file)}_counts.out")
-            fc_command = f"featureCounts -a {fc_input} -F SAF -o {fc_output} {mapping_file}"
-            log_file = os.path.join(temp_folder_path, f"{os.path.basename(mapping_file)}_featureCounts.log")
-        
-            # Specify the file to capture program output
-            program_output_file = os.path.join(temp_folder_path, f"{os.path.basename(mapping_file)}_featureCounts.out")
-        
-            task_done = threading.Event()
-        
-            with open(log_file, 'w') as f, open(program_output_file, 'w') as p_out:
-                process = subprocess.Popen(fc_command, shell=True, stdout=p_out, stderr=f)
 
-            while process.poll() is None:
-                time.sleep(0.1)
 
-            #Calculate statistsc on the abundance data: average, standard div, sum.
-
-            # Folder where fc_output files are stored
-            fc_folder_path = temp_folder_path  # Replace with your folder path
-            tsv_output_file = os.path.join(temp_folder_path, 'mapping_summary.tsv')  # Replace with your desired output file path
+            #use FeatureCount to quantify
             
-            with open(tsv_output_file, 'w') as tsv_file:
-                tsv_file.write('\t'.join(["sample name", "reads mapped", "total reads", "proportion"]) + '\n')
+            #SAM/BAM file may be a file list so you will need to loop through them
+            #one by one
             
+            #There should one .saf file per plastic folder.      
+            
+            # Split the mappings argument into a list of individual file paths
+            mapping_files = p.mappings.split(',')
+            for mapping_file in mapping_files:
+
+                sample_name = mapping_file.split('.')[0].split('/')[-1]
+                mapping_file = mapping_file.strip()  # Remove any leading/trailing whitespace
+                fc_input = saf_file_path
+                fc_output = os.path.join(temp_folder_path, f"{plastic_type}_{os.path.basename(mapping_file)}_counts.out")
+                fc_command = f"featureCounts -a {fc_input} -F SAF -o {fc_output} {mapping_file}"
+                log_file = os.path.join(temp_folder_path, f"{os.path.basename(mapping_file)}_featureCounts.log")
+            
+                # Specify the file to capture program output
+                program_output_file = os.path.join(temp_folder_path, f"{os.path.basename(mapping_file)}_featureCounts.out")
+            
+                task_done = threading.Event()
+            
+                with open(log_file, 'w') as f, open(program_output_file, 'w') as p_out:
+                    process = subprocess.Popen(fc_command, shell=True, stdout=p_out, stderr=f)
+
+                while process.poll() is None:
+                    time.sleep(0.1)
+
+                #Calculate statistsc on the abundance data: average, standard div, sum.
+
+                # Folder where fc_output files are stored
+                fc_folder_path = temp_folder_path            
+
                 # Iterate through all files in the directory
                 for filename in os.listdir(fc_folder_path):
                     # Check if the file is a featureCounts output file
-                    if filename.endswith("_counts.out.summary"):
-                        print(f"Processing file: {filename}")  # Debugging print
-                        # Open the file
-                        with open(os.path.join(fc_folder_path, filename), 'r') as fc_output:
-                            # Initialize counts
-                            reads_mapped = 0
-                            total_reads = 0
+                    if filename.endswith("_counts.out.summary") and sample_name in filename:
+                        logging.debug(f"Processing file: {filename}") 
+
+                        # Open the TSV output file in append mode
+                        tsv_output_file = os.path.join(p.temps, f'{sample_name}.tsv')
+                        with open(tsv_output_file, 'a+') as tsv_file:
+
+                            # Open the file
+                            with open(os.path.join(fc_folder_path, filename), 'r') as fc_output:
+                                # Initialize counts
+                                reads_mapped = 0
+                                total_reads = 0
+
+                                # Iterate through each line in the file
+                                for line in fc_output:
+                                    # Ignore lines that are not part of the summary
+                                    if not line.startswith('Assigned') and not line.startswith('Unassigned'):
+                                        continue
+
+                                    # Extract count from the line
+                                    count = int(line.split('\t')[1].strip())
+
+                                    # Add the count to the appropriate variable
+                                    if line.startswith('Assigned'):
+                                        reads_mapped = count
+                                    total_reads += count
+
+                                # Calculate proportion
+                                proportion = reads_mapped / total_reads
+                                # Format the proportion in scientific notation
+                                proportion = "{:.2e}".format(proportion)
+
+                                # Write row to TSV file
+                                tsv_file.write('\t'.join([plastic_type, str(reads_mapped), str(total_reads), str(proportion)]) + '\n')
+        else:
+            logging.warning(f"No .fasta files found in {temp_folder_path}. Skipping this folder.")
+            pass
+
             
-                            # Iterate through each line in the file
-                            for line in fc_output:
-                                # Ignore lines that are not part of the summary
-                                if not line.startswith('Assigned') and not line.startswith('Unassigned'):
-                                    continue
-                                
-                                # Extract count from the line
-                                count = int(line.split('\t')[1].strip())
-                                
-                                # Add the count to the appropriate variable
-                                if line.startswith('Assigned'):
-                                    reads_mapped = count
-                                total_reads += count
             
-                            # Calculate proportion
-                            proportion = reads_mapped / total_reads
-            
-                            # Get sample name from filename
-                            sample_name = filename.split('_counts.out.summary')[0]
-            
-                            # Write row to TSV file
-                            tsv_file.write('\t'.join([sample_name, str(reads_mapped), str(total_reads), str(proportion)]) + '\n')
+
 
     except Exception as e:
-        print(f"Error running HMMER for {plastic_type}: {e}")
+        logging.error(f"Error running featurecounts for {plastic_type}: {e}")

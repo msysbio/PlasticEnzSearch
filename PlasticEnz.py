@@ -7,31 +7,46 @@ from pathmanager import PathManager
 import traceback
 from database_operations import database_fetch
 from hmm_operations import hmm_fetch
+from output import create_html, remove_temps
+import logging
 
 
-def main(args):
+def main(args, debug=False):
     # Create an instance of PathManager with the provided arguments
     p = PathManager(args)
+
+    # Set up logging
+    logging.basicConfig(level=logging.WARNING)
     
     # extract ORFs from the contigs and translate them into protein code using PRODIGAL
-    print('Extracting ORFs using PRODIGAL...')
+    logging.info('Extracting ORFs using PRODIGAL...')
     translate_search.run_prodigal(p)
     
     # Search extracted ORFs with HMM motifs using HMMER
-    print('Searching for HMM hits...')
+    logging.info('Searching for HMM hits...')
     translate_search.run_hmmer(p)
+    # TODO: "no hmm found for plastic type"
 
     # Blast reads 
-    print('Blasting reads...')
-    blast_search_in_directory(p.temps)
+    logging.info('Blasting reads...')
+    blast_search_in_directory(p.temps) #  TODO: in plastic folders instead of temps, skip if empty
 
     # Calculate abundances using FeatureCount
-    print('Calculating abundances...')
-    annotation(args)
+    logging.info('Calculating abundances...')
+    annotation(p)    
 
-    # Create report
-    # TODO: create report
+    # TODO: html: blast annotation, AI: confidence scoring
+
+    # Create html
+    logging.info('Creating html report...')
+    create_html(p)
+
+    # Remove temporary files
+    logging.info('Removing temporary files...')
+    remove_temps(p, debug)
     
+
+
 
 # Entry point of the script
 if __name__ == "__main__":

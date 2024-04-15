@@ -16,12 +16,13 @@ Requires:
 import os
 import pandas as pd
 import sys
-from utilities import check_dependencies,spinning_cursor_task
+from utilities import check_dependencies
 import threading
 import subprocess
 import time
 import glob
 import numpy as np
+import logging
 
 error2="""
  __ __  __  __  __  
@@ -45,8 +46,8 @@ def check_args(args):
 def quantify_hmm(p):
 
 # Load the read_counts table and sum the second column
-    if args.gene_counts_file is None and args.bams:
-        bam_dir = args.bams
+    if p.gene_counts_file is None and p.bams:
+        bam_dir = p.bams
         bam_files = [os.path.join(bam_dir, bam_file) for bam_file in os.listdir(bam_dir) if bam_file.endswith('.bam')]
     
         gene_counts_file = []
@@ -56,35 +57,28 @@ def quantify_hmm(p):
             base = os.path.basename(bam_file).split(".")[0]
             log_file = os.path.abspath(os.path.join(p.temps, f"{base}_samtools.log"))
             samtools_output = os.path.abspath(os.path.join(p.temps, f"{base}_samtools_output.tsv"))
-            
-            task_done = threading.Event()
     
             with open(log_file, 'w') as f_err, open(samtools_output, 'w') as f_out:
                 process = subprocess.Popen(samtools_command, shell=True, stdout=f_out, stderr=f_err)
-    
-            t = threading.Thread(target=spinning_cursor_task, args=(task_done,'samtools'))
-            t.start()
-    
+
             while process.poll() is None:
                 time.sleep(0.1)
+
     
-            task_done.set()
-            t.join()
-    
-            print("\nsamtools finished running. Logs saved to {}".format(log_file))
+            logging.info("\nsamtools finished running. Logs saved to {}".format(log_file))
     
             if not os.path.exists(samtools_output) or os.stat(samtools_output).st_size == 0:
                 print(f"SAMTOOLS FAILED FOR {base} file: For more information check samtools log at: {log_file}")
             else:
                 gene_counts_file.append(samtools_output)
                 
-    elif args.gene_counts_file and args.bams is None:
-        gene_counts_file = args.gene_counts_file
+    elif p.gene_counts_file and p.bams is None:
+        gene_counts_file = p.gene_counts_file
 
     # Initialize an empty list to store abundance data for each file
 
     abundance_data = []    
-    hmmer_output_file = [os.path.join(temp_dir, file) for file in os.listdir(temp_dir) if file.endswith("_HMMER.out")]
+    hmmer_output_file = [os.path.join(p.temps, file) for file in os.listdir(p.temps) if file.endswith("_HMMER.out")]
 
     if not hmmer_output_file:
         print(error2)

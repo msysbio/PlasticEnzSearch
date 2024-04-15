@@ -1,6 +1,7 @@
 import os
 import sys
 import utilities
+import logging
 
 def check_directory_exists(directory):
     if not os.path.isdir(directory):
@@ -34,7 +35,7 @@ def check_arg(arg, arg_name):
     if arg is None:
         error = f"\nError: No {arg_name} provided\n"
         error += f"Use the flag --{arg_name} to provide it.\n"
-        print(error)
+        logging.error(error)
         sys.exit(1)
 
 def fetch_motifs():

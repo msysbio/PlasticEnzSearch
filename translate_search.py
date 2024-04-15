@@ -7,6 +7,7 @@ import utilities
 import multiprocessing
 from functools import partial
 import shutil
+import logging
 
 #use pprodigal if installed, parallelizes prodigal
 def get_prodigal_command(p):
@@ -45,20 +46,14 @@ def run_prodigal(p):
     
     prodigal_log_file = os.path.join(p.output, "temps", "prodigal.log")
     
-    task_done = threading.Event()
 
     with open(prodigal_log_file, 'w') as f:
         process = subprocess.Popen(prodigal_command, shell=True, stdout=f, stderr=f)
-
-    t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'prodigal '))
-    t.start()
     
     while process.poll() is None:
         time.sleep(0.1)
-    task_done.set()
-    t.join()
     
-    print("\nprodigal finished running. Prodigal logs saved to {}".format(prodigal_log_file))
+    logging.info("\nprodigal finished running. Prodigal logs saved to {}".format(prodigal_log_file))
 
 
 def run_hmmer(p):
@@ -70,11 +65,6 @@ def run_hmmer(p):
     # Create a new function that has `p` already filled in
     run_hmmer_thread_p = partial(run_hmmer_thread, p=p)
 
-    task_done = threading.Event()
-    t = threading.Thread(target=utilities.spinning_cursor_task, args=(task_done,'hmmer'))
-    t.start()
-
-    utilities.disable_swap()
     # Start the tasks
     if p.multiprocessing:
         pool = multiprocessing.Pool(processes=4)
@@ -86,13 +76,7 @@ def run_hmmer(p):
 
     # Wait for the tasks to finish
     pool.close()
-    pool.join()
-
-    utilities.enable_swap()
-
-    task_done.set()
-    t.join()
-    
+    pool.join()    
 
 def run_hmmer_thread(plastic_name, p):
     try:
@@ -125,29 +109,30 @@ def run_hmmer_thread(plastic_name, p):
         while process.poll() is None:
             time.sleep(0.1)
 
-        print("\nhmmsearch finished running. Results saved to {}".format(hmm_output))
-        print("hmmsearch logs saved to {}".format(log_file))
-        print("hmmsearch program output saved to {}".format(program_output_file))
+        logging.info("\nhmmsearch finished running. Results saved to {}".format(hmm_output))
+        logging.info("hmmsearch logs saved to {}".format(log_file))
+        logging.info("hmmsearch program output saved to {}".format(program_output_file))
         
+
+        output = os.path.join(temp_dir, f"{contigs_base}_{plastic_name}_hmm_output.fasta")
         try:
             qresults = SearchIO.read(hmm_output, "hmmer3-tab")
             hits = [result.id for result in qresults]
+
+            records = list(SeqIO.parse(aa_file, "fasta"))
+            for record in records:
+                if record.id in hits and len(record) > 10:
+                    with open(output, "a") as f:
+                        f.write(">" + str(record.id) + "\n" + str(record.seq) + "\n")
+
         except Exception as e:
-            print(f"Error reading HMMER output: {e}")
-            hits = []
+            logging.warning(f"Error reading HMMER output for {plastic_name}: {e}")
+            with open(output, "w") as f:
+                pass
 
-        records = list(SeqIO.parse(aa_file, "fasta"))
-        output = os.path.join(temp_dir, f"{contigs_base}_{plastic_name}_hmm_output.fasta")
-
-        if os.path.exists(output):
-            os.remove(output)
-
-        for record in records:
-            if record.id in hits and len(record) > 10:
-                with open(output, "a") as f:
-                    f.write(">" + str(record.id) + "\n" + str(record.seq) + "\n")
+        
     except Exception as e:
-        print(f"Error running HMMER for {plastic_name}: {e}")
+        logging.error(f"Error running HMMER for {plastic_name}: {e}")
 
     
 

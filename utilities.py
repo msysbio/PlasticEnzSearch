@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import multiprocessing
-import subprocess
+import logging
 
 def check_dependencies():
     # List of commands to check
@@ -11,12 +11,6 @@ def check_dependencies():
     
     for command in commands:
         add_to_path(command)
-
-def disable_swap():
-    subprocess.run(["swapoff", "-a"], shell=True, executable="/bin/bash")
-
-def enable_swap():
-    subprocess.run(["swapon", "-a"], shell=True, executable="/bin/bash")
 
 # Find the full path to the command
 def get_path(command):
@@ -65,10 +59,10 @@ def spinning_cursor():
 
 def spinning_cursor_task(task_done,program):
     spinner = spinning_cursor()
-    print(f"Starting {program} in the background. This may take a while...")
+    logging.info(f"Starting {program} in the background. This may take a while...")
     while not task_done.is_set():
         sys.stdout.write(next(spinner))  # write the next character
         sys.stdout.flush()                # flush stdout buffer (actual character display)
         sys.stdout.write('\b')            # erase the last written char
         time.sleep(0.1)
-    print(f"{program} finished running.")
+    logging.info(f"{program} finished running.")
