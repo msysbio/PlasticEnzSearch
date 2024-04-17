@@ -3,13 +3,55 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.offline as pyo
+from plotly.offline import plot
+from plotly.graph_objs import Layout
+from plotly.subplots import make_subplots
 import shutil
 
-# Function to create a pie chart and return its HTML representation
-def create_plot(df):
-    fig = px.bar(df, x='mapping', y='log reads mapped', color='plastic name', pattern_shape='plastic name', title='Plastic Reads Mapped', 
-                 hover_data={'reads mapped': True, 'log reads mapped': False}, barmode='group')
+# Function to create a bar chart and return its HTML representation
+def create_plot(df, y, hover_y = None):
+    if hover_y is None:
+        return px.bar(df, x='sample', y=y, color='plastic name', pattern_shape='plastic name', title=y, barmode='group')
+    else:
+        return px.bar(df, x='sample', y=hover_y, color='plastic name', pattern_shape='plastic name', title='Plastic Reads Mapped', 
+                 hover_data={y: True, hover_y: False}, barmode='group')
+    
+
+
+def create_fig(df):
+        
+    # Initialize a dictionary to keep track of trace names
+    trace_names = {}
+
+    # Create a list of figures
+    figs = [
+        create_plot(df, 'reads mapped', 'log reads mapped'),
+        create_plot(df, 'proportion'),
+        create_plot(df, 'rpkm')
+    ]
+    n = len(figs)  # Number of figures
+    fig = make_subplots(rows=n, cols=1)
+
+    # Add traces to the subplot
+    for i, fig_i in enumerate(figs):
+        for trace in fig_i.data:
+            # If the trace name is already in the legend, hide it
+            if trace.name in trace_names:
+                trace.showlegend = False
+            else:
+                trace_names[trace.name] = True
+            fig.add_trace(trace, row=i+1, col=1)
+
+    # Set the title and y-axis labels for each subplot
+    titles = ['Log Reads Mapped', 'Proportion', 'RPKM']
+    for i in range(n):
+        fig.update_yaxes(title_text=titles[i], row=i+1, col=1)
+
+    # Set a single legend for the entire subplot
+    fig.update_layout(showlegend=True)
+
     return fig
+
 
 def create_html(p):
     # Create an empty list to store all the dataframes
@@ -23,7 +65,7 @@ def create_html(p):
             df = pd.read_csv(os.path.join(p.temps, filename), sep='\t')
             # Scale the values logarithmically
             df['log reads mapped'] = df['reads mapped'].apply(lambda x: np.log(x) if x != 0 else 0)
-            df['mapping'] = name
+            df['sample'] = name
 
             # Append the current dataframe to the list of dataframes
             combined_dfs.append(df)
@@ -31,9 +73,32 @@ def create_html(p):
     # Concatenate all the dataframes in the list into a single dataframe
     combined_df = pd.concat(combined_dfs)
 
-    # Write the HTML string to an HTML file
+    fig = create_fig(combined_df)
+
+    # Generate the Plotly figure's div element
+    plot_div = plot(fig, include_plotlyjs=False, output_type='div')
+
+    # Create the HTML content with the title, text, and Plotly figure
+    html_content = f"""
+    <html>
+    <head>
+    <title>PlasticEnz</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+    <h1>Enzyme Abundance</h1>
+    <p>These figures show the abundance of potential plastic enzymes in the samples given to the PlasicEnzSearch program.</p>
+    {plot_div}
+    </body>
+    </html>
+    """
+
+    # Save the HTML content to a file
     html_file = os.path.join(p.output, 'abundances.html')
-    pyo.plot(create_plot(combined_df), filename=html_file, auto_open=False)
+    with open(html_file, 'w') as f:
+        f.write(html_content)
+        
+
 
 
 def move_files(file_extensions, source, destination):
@@ -43,7 +108,7 @@ def move_files(file_extensions, source, destination):
                 src = os.path.join(root, file)
                 dst = os.path.join(destination, file)
                 shutil.copy(src, dst)  # Overwrites the destination file if it exists
-                #os.remove(src)  # Deletes the source file
+                #os.remove(src)  # Deletes the source file(should be removed anyway by remove_temps function)
 
 def remove_temps(p, debug=False):
 

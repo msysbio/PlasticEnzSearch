@@ -7,6 +7,7 @@ import time
 import multiprocessing
 from functools import partial
 import logging
+import pandas as pd
 
 def check_translate_result(p):
 
@@ -91,7 +92,7 @@ def annotation(p):
         sample_name = mapping_file.split('.')[0].split('/')[-1]
         tsv_output_file = os.path.join(p.temps, f'{sample_name}.tsv')
         with open(tsv_output_file, 'w') as tsv_file:
-            tsv_file.write('\t'.join(["plastic name", "reads mapped", "total reads", "proportion"]) + '\n')
+            tsv_file.write('\t'.join(["plastic name", "reads mapped", "total reads", "proportion", "rpkm"]) + '\n')
 
 
     # Create a new function that has `p` already filled in
@@ -128,9 +129,9 @@ def featurecounts(plastic_type, p):
             # Convert corrected .ffn file to .saf
             saf_file_path = os.path.join(temp_folder_path, f"{output_file_base}.saf")
             ffn_to_saf(corrected_file_path, saf_file_path)
+
+
             logging.info(f"Starting {plastic_type} featurecounts.")
-
-
 
             #use FeatureCount to quantify
             
@@ -153,63 +154,79 @@ def featurecounts(plastic_type, p):
                 # Specify the file to capture program output
                 program_output_file = os.path.join(temp_folder_path, f"{os.path.basename(mapping_file)}_featureCounts.out")
             
-                task_done = threading.Event()
-            
                 with open(log_file, 'w') as f, open(program_output_file, 'w') as p_out:
                     process = subprocess.Popen(fc_command, shell=True, stdout=p_out, stderr=f)
 
                 while process.poll() is None:
                     time.sleep(0.1)
 
-                #Calculate statistsc on the abundance data: average, standard div, sum.
+                #Calculate statistsics on the abundance data: average, standard div, sum.
+
+                # Initialize counts
+                reads_mapped = 0
+                total_reads = 0
+                total_rpk = 0
 
                 # Folder where fc_output files are stored
                 fc_folder_path = temp_folder_path            
-
                 # Iterate through all files in the directory
                 for filename in os.listdir(fc_folder_path):
-                    # Check if the file is a featureCounts output file
+                    # Check if the file is a featureCounts output summary file
                     if filename.endswith("_counts.out.summary") and sample_name in filename:
-                        logging.debug(f"Processing file: {filename}") 
+                        # Open the file
+                        with open(os.path.join(fc_folder_path, filename), 'r') as fc_output:
 
-                        # Open the TSV output file in append mode
-                        tsv_output_file = os.path.join(p.temps, f'{sample_name}.tsv')
-                        with open(tsv_output_file, 'a+') as tsv_file:
+                            # Iterate through each line in the file
+                            for line in fc_output:
+                                # Ignore lines that are not part of the summary
+                                if not line.startswith('Assigned') and not line.startswith('Unassigned'):
+                                    continue
 
-                            # Open the file
-                            with open(os.path.join(fc_folder_path, filename), 'r') as fc_output:
-                                # Initialize counts
-                                reads_mapped = 0
-                                total_reads = 0
+                                # Extract count from the line
+                                count = int(line.split('\t')[1].strip())
 
-                                # Iterate through each line in the file
-                                for line in fc_output:
-                                    # Ignore lines that are not part of the summary
-                                    if not line.startswith('Assigned') and not line.startswith('Unassigned'):
-                                        continue
+                                # Add the count to the appropriate variable
+                                if line.startswith('Assigned'):
+                                    reads_mapped = count
+                                total_reads += count
 
-                                    # Extract count from the line
-                                    count = int(line.split('\t')[1].strip())
 
-                                    # Add the count to the appropriate variable
-                                    if line.startswith('Assigned'):
-                                        reads_mapped = count
-                                    total_reads += count
+                    # Check if the file is a featureCounts output file
+                    if filename.endswith("_counts.out") and sample_name in filename:
+                        # Open the file
+                        with open(os.path.join(fc_folder_path, filename), 'r') as fc_output:
+                            # Skip the header lines
+                            for _ in range(2):
+                                next(fc_output)
 
-                                # Calculate proportion
-                                proportion = reads_mapped / total_reads
-                                # Format the proportion in scientific notation
-                                proportion = "{:.2e}".format(proportion)
+                            # Iterate through each line in the file
+                            for line in fc_output:
 
-                                # Write row to TSV file
-                                tsv_file.write('\t'.join([plastic_type, str(reads_mapped), str(total_reads), str(proportion)]) + '\n')
+                                # Extract count and length from the line
+                                fields = line.split('\t')
+                                reads = int(fields[6].strip())
+                                gene_length = int(fields[5].strip())
+
+                                # Calculate RPK and add it to the list
+                                rpk = reads / (gene_length / 1e3) if gene_length != 0 else 0
+                                total_rpk += rpk
+
+                            
+                # Calculate proportion
+                proportion = reads_mapped / total_reads if total_reads != 0 else 0
+                # Format the proportion in scientific notation
+                proportion = "{:.2e}".format(proportion)
+
+                # Calculate rpkm
+                rpkm = total_rpk / (total_reads / 1e6) if total_reads != 0 else 0
+
+                # Open the TSV output file in append mode
+                tsv_output_file = os.path.join(p.temps, f'{sample_name}.tsv')
+                with open(tsv_output_file, 'a+') as tsv_file:
+                    # Write row to TSV file
+                    tsv_file.write('\t'.join([plastic_type, str(reads_mapped), str(total_reads), str(proportion), str(rpkm)]) + '\n')
         else:
             logging.warning(f"No .fasta files found in {temp_folder_path}. Skipping this folder.")
             pass
-
-            
-            
-
-
     except Exception as e:
         logging.error(f"Error running featurecounts for {plastic_type}: {e}")

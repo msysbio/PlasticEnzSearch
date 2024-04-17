@@ -16,7 +16,10 @@ def main(args, debug=False):
     p = PathManager(args)
 
     # Set up logging
-    logging.basicConfig(level=logging.WARNING)
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.WARNING)
     
     # extract ORFs from the contigs and translate them into protein code using PRODIGAL
     logging.info('Extracting ORFs using PRODIGAL...')
