@@ -5,6 +5,9 @@ import time
 import multiprocessing
 import logging
 
+MAX_CORES = True
+CORES = 2
+
 def check_dependencies():
     # List of commands to check
     commands = ["hmmsearch", "featureCounts", "prodigal", "samtools"]
@@ -36,7 +39,18 @@ def add_to_path(command):
 
 # Returns the number of logical cores on the cpu
 def get_logical_cores():
-    return multiprocessing.cpu_count()
+    if MAX_CORES:
+        return multiprocessing.cpu_count()
+    else:
+        return min(multiprocessing.cpu_count(), CORES)
+    
+def set_cores(cores):
+    MAX_CORES = False
+    CORES = cores
+
+def set_max_cores():
+    MAX_CORES = True
+    
 
 # If the command used to run in parallel is in the PATH, return the number of logical cores, otherwise return 1
 def run_in_parallel(command):

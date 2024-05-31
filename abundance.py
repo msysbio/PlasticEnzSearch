@@ -2,12 +2,10 @@ from Bio import SeqIO
 import os
 import utilities
 import subprocess
-import threading
 import time
 import multiprocessing
 from functools import partial
 import logging
-import pandas as pd
 
 def check_translate_result(p):
 

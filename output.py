@@ -42,10 +42,12 @@ def create_fig(df):
                 trace_names[trace.name] = True
             fig.add_trace(trace, row=i+1, col=1)
 
-    # Set the title and y-axis labels for each subplot
-    titles = ['Log Reads Mapped', 'Proportion', 'RPKM']
+    # Set the labels for the x- and y-axis for each subplot
+    ylabels = ['Log Reads Mapped', 'Proportion', 'RPKM']
+    xlabels = ['Sample', 'Sample', 'Sample']
     for i in range(n):
-        fig.update_yaxes(title_text=titles[i], row=i+1, col=1)
+        fig.update_yaxes(title_text=ylabels[i], row=i+1, col=1)
+        fig.update_xaxes(title_text=xlabels[i], row=i+1, col=1) 
 
     # Set a single legend for the entire subplot
     fig.update_layout(showlegend=True)
@@ -82,12 +84,12 @@ def create_html(p):
     html_content = f"""
     <html>
     <head>
-    <title>PlasticEnz</title>
+    <title>PlasticTools</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     </head>
     <body>
     <h1>Enzyme Abundance</h1>
-    <p>These figures show the abundance of potential plastic enzymes in the samples given to the PlasicEnzSearch program.</p>
+    <p>These figures show the abundance of potential plastic degrading enzymes in the samples given to the <i>PlasticTools</i> program.</p>
     {plot_div}
     </body>
     </html>

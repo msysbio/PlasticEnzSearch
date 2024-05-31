@@ -2,7 +2,6 @@ import os
 import subprocess
 from Bio import SearchIO, SeqIO
 import time
-import threading
 import utilities
 import multiprocessing
 from functools import partial
@@ -57,10 +56,7 @@ def run_prodigal(p):
 
 
 def run_hmmer(p):
-    if isinstance(p.plastic, str) and p.plastic != "all":
-        plastic_names = p.plastic.split(',')
-    elif isinstance(p.plastic, str) and p.plastic == "all":
-        plastic_names = p.all_plastics
+    plastic_names = p.plastic_list
 
     # Create a new function that has `p` already filled in
     run_hmmer_thread_p = partial(run_hmmer_thread, p=p)
@@ -100,8 +96,6 @@ def run_hmmer_thread(plastic_name, p):
         
         # specify the file to capture program output
         program_output_file = os.path.join(temp_dir, f"{contigs_base}_{plastic_name}_hmmsearch.out")
-        
-        task_done = threading.Event()
         
         with open(log_file, 'w') as f, open(program_output_file, 'w') as p_out:
             process = subprocess.Popen(hmmer_command, shell=True, stdout=p_out, stderr=f)

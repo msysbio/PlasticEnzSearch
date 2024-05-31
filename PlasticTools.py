@@ -1,7 +1,8 @@
 import argparse
 import translate_search
 from abundance import annotation
-from annotation import blast_search_in_directory
+from annotation import blast_search
+from blast_annotation import run_blast
 from quantify_hmm import quantify_hmm
 from pathmanager import PathManager
 import traceback
@@ -9,9 +10,19 @@ from database_operations import database_fetch
 from hmm_operations import hmm_fetch
 from output import create_html, remove_temps
 import logging
+import threading
 
 
-def main(args, debug=False):
+def main(args, debug=False, blast=True):
+    """Main function to run PlasticTools.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+        debug (bool, optional): If True, enables debug logging. Defaults to False.
+        blast (bool, optional): If True, enables blast search. Defaults to True.
+    """
+
+
     # Create an instance of PathManager with the provided arguments
     p = PathManager(args)
 
@@ -28,17 +39,20 @@ def main(args, debug=False):
     # Search extracted ORFs with HMM motifs using HMMER
     logging.info('Searching for HMM hits...')
     translate_search.run_hmmer(p)
-    # TODO: "no hmm found for plastic type"
 
-    # Blast reads 
-    logging.info('Blasting reads...')
-    blast_search_in_directory(p.temps) #  TODO: in plastic folders instead of temps, skip if empty
+    if blast:
+        # Create a thread to run blast search in the background
+        logging.info('Blasting reads...')
+        blast_thread = threading.Thread(target=run_blast, args=(p.output,))
+        blast_thread.start()
 
-    # Calculate abundances using FeatureCount
+    # Continue with annotation
     logging.info('Calculating abundances...')
-    annotation(p)    
+    annotation(p)
 
-    # TODO: html: blast annotation, AI: confidence scoring
+    if blast:
+        # Wait for blast to finish
+        blast_thread.join()
 
     # Create html
     logging.info('Creating html report...')
@@ -46,13 +60,14 @@ def main(args, debug=False):
 
     # Remove temporary files
     logging.info('Removing temporary files...')
-    remove_temps(p, debug)
+    remove_temps(p, debug) # debug=True to keep temporary files and only moving fasta, tsv and html files to the output directory
     
 
 
 
-# Entry point of the script
 if __name__ == "__main__":
+    """Entry point of the tool for the command-line interface."""
+
     # Print the logo
     logo = """
        ___ _           _   _        __          
@@ -64,7 +79,7 @@ if __name__ == "__main__":
     print(logo)
 
     # Create the parser
-    parser = argparse.ArgumentParser(prog='PlasticEnz Tool', add_help=False)
+    parser = argparse.ArgumentParser(prog='PlasticTools', add_help=False)
 
     # Define required and optional argument groups
     required = parser.add_argument_group('required arguments')
@@ -77,9 +92,12 @@ if __name__ == "__main__":
     required.add_argument('--mappings', help='Provide path to BAM/SAM files separated by the comma')
  
     # Add optional arguments
+    optional.add_argument('--b', action='store_false', help='Disable blast')
     optional.add_argument('--p', action='store_true', help='Enable multiprocessing')
     optional.add_argument('--f', action='store_true', help='Force overwrite existing files')
+    optional.add_argument('--d', action='store_true', help='Enable debug logging')
  
+    optional.add_argument('-v', '--version', action='version', version='%(prog)s 1.0', help="Show the version number and exit")
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
               help='Show this help message and exit')
  
@@ -95,7 +113,7 @@ if __name__ == "__main__":
         elif args.command == 'hmm-fetch':
             hmm_fetch(args.output)
         else:
-            main(args)
+            main(args, debug=args.d, blast=not args.b)
        
     except Exception as e:
         with open('program_crash_data.txt', 'w') as f:

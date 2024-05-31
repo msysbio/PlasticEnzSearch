@@ -3,33 +3,35 @@ from abundance import annotation
 from args import Args
 import translate_search
 from quantify_hmm import quantify_hmm
-from annotation import blast_search_in_directory
+from annotation import blast_search
 from pathmanager import PathManager
 from output import create_html, remove_temps
-import PlasticEnz
+import PlasticTools
 import os
 import database_operations
 
+data_folder = "/home/jasper/Thesis/"
+
 args1 = Args(
-        output = '/home/jasper/Thesis/Test_data/output',
-        contigs = '/home/jasper/Thesis/Test_data/BW_contigs.fa',
+        output = f'{data_folder}Test_data/output',
+        contigs = f'{data_folder}Test_data/contigs-fixed.fa',
         plastic = 'all',
-        mappings='/home/jasper/Thesis/Test_data/GC125633.bam,/home/jasper/Thesis/Test_data/GC125648.bam,/home/jasper/Thesis/Test_data/GC125657.bam,/home/jasper/Thesis/Test_data/GC125668.bam')
+        mappings=f'{data_folder}Test_data/GC125633.bam,{data_folder}Test_data/GC125648.bam,{data_folder}Test_data/GC125657.bam,{data_folder}Test_data/GC125668.bam')
        
 args2 = Args(     
-        output = '/home/jasper/Thesis/Test_data2/output',
-        contigs = '/home/jasper/Thesis/Test_data2/Citadell.contigs.fa',
+        output = f'{data_folder}Test_data2/output',
+        contigs = f'{data_folder}Test_data2/Citadell.contigs.fa',
         plastic = 'all',
-        mappings='/home/jasper/Thesis/Test_data2/GC125618.sorted.bam,/home/jasper/Thesis/Test_data2/GC127864.sorted.bam')
+        mappings=f'{data_folder}Test_data2/GC125618.sorted.bam,{data_folder}Test_data2/GC127864.sorted.bam')
 
-class TestPlasticEnz(unittest.TestCase):
+
+class TestPlasticTools(unittest.TestCase):
     def setUp(self):
         self.args = args2
         self.p = PathManager(self.args)
         
         #database_operations.database_fetch(self.args.plastic, self.args.output)
     
-    #@unittest.skip("takes a long time to run, was succesful before")
     def test1_run_prodigal(self):
         # Try to run the function
         try:
@@ -80,10 +82,10 @@ class TestPlasticEnz(unittest.TestCase):
             self.assertTrue(os.path.exists(output), f"{plastic_name}: {output}")
 
 
-    def test4_blast_search_in_directory(self):
+    def test4_blast_search(self):
         # Try to run the function
         try:
-            blast_search_in_directory(self.p.output)
+            blast_search.blast_search(self.p)
         except Exception as e:
             print(e)
     
@@ -166,11 +168,12 @@ class TestPlasticEnz(unittest.TestCase):
         self.assertTrue(html_files != [], html_files)
 
 def run_tests():
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPlasticEnz)
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestPlasticTools)
     suite._tests.sort(key=lambda x: x._testMethodName)
     unittest.TextTestRunner().run(suite)
 
 if __name__ == '__main__':
-    #run_tests()
-    PlasticEnz.main(args2, debug=True)
+    run_tests()
+    #PlasticTools.main(args1, debug=True, blast=False)
+    #PlasticTools.main(args2, debug=True, blast=False)
 

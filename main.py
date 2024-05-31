@@ -1,6 +1,6 @@
 import flet as ft
 from args import Args
-import PlasticEnz
+import PlasticTools
 import io
 import sys
 import traceback
@@ -8,8 +8,8 @@ import logging
 import os
 import webbrowser
 
-class PlasticEnzymeSearch:
-    """A class representing the PlasticEnz GUI.
+class GUI:
+    """A class representing the PlasticTools GUI.
 
     This class provides functionality to run the Plastic Tool with a graphical user interface.
 
@@ -32,7 +32,7 @@ class PlasticEnzymeSearch:
     """
 
     def __init__(self, page: ft.Page):
-        """Initialize the PlasticEnzymeSearch object.
+        """Initialize the PlasticTools GUI.
 
         Args:
             page (ft.Page): The page object representing the user interface.
@@ -40,7 +40,7 @@ class PlasticEnzymeSearch:
         """
         # Initialize the page and set its title
         self.page = page
-        self.page.title = "Plastic Enzyme Search"
+        self.page.title = "PlasticTools"
 
         # Define the types of plastics
         self.plastic_types = ('all', 'pbat', 'nylon', 'ab-hydrolase', 'pet', 'pbsa', 'pha', 'pcl', 'phb', 'pla', 'cutinase')
@@ -61,7 +61,7 @@ class PlasticEnzymeSearch:
         self.progress_ring = ft.Container(content=ft.ProgressRing(), alignment=ft.alignment.center)
 
         # Create submit button and add it to the page
-        self.submit_btn = ft.ElevatedButton(text="Run PlastEnzSearch", on_click=self.button_clicked)
+        self.submit_btn = ft.ElevatedButton(text="Run PlasticTools", on_click=self.button_clicked)
 
         # Center the widgets
         self.centered_submit_btn = ft.Container(content=self.submit_btn, alignment=ft.alignment.center)
@@ -139,7 +139,7 @@ class PlasticEnzymeSearch:
     def button_clicked(self, e):
         """Handle the click event of the submit button.
 
-        This method runs the PlasticEnzSearch application and updates the output markdown widget.
+        This method runs the PlasticTools application and updates the output markdown widget.
 
         Args:
             e: The event object containing the button information.
@@ -162,7 +162,7 @@ class PlasticEnzymeSearch:
             self.page.add(self.progress_ring)
 
             # Run the main function
-            PlasticEnz.main(args)
+            PlasticTools.main(args)
 
             # Remove progress ring from the page
             self.page.remove(self.progress_ring)
@@ -222,7 +222,7 @@ class PlasticEnzymeSearch:
 
 
     def run(self):
-        """Run the Plastic Enzyme Search application.
+        """Run the PlasticTools application.
 
         This method sets up the user interface and runs the application.
 
@@ -291,15 +291,15 @@ class PlasticEnzymeSearch:
 
 if __name__ == '__main__':
     def run_app(page: ft.Page):
-        """Run the Plastic Enzyme Search application.
+        """Run the PlasticTools application.
 
-        This function creates an instance of the PlasticEnzymeSearch class and runs the application.
+        This function creates an instance of the GUI class and runs the application.
 
         Args:
             page (ft.Page): The page object representing the user interface.
 
         """
-        PlasticEnzymeSearch(page).run()
+        GUI(page).run()
 
     ft.app(target=run_app)
     #ft.app(target=run_app, view=ft.AppView.WEB_BROWSER)
